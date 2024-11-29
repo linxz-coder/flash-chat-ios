@@ -10,12 +10,11 @@ import UIKit
 import FirebaseCore
 import FirebaseFirestore
 import FirebaseAuth
+import IQKeyboardManagerSwift
 
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         //设置http代理，firebase不支持socks5代理
@@ -25,6 +24,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let db = Firestore.firestore()
         
         print(db) //测试是否成功，要出现<FIRFirestore: 0x600002129c70>字样
+        
+        IQKeyboardManager.shared.isEnabled = true
+        //IQKeyboardManager.shared.enableAutoToolbar = true //出现done的标志
+        IQKeyboardManager.shared.resignOnTouchOutside = true
+        
+        //全局样式-顶部菜单颜色
+        let appearance = UINavigationBarAppearance()
+        appearance.backgroundColor = UIColor(named: K.BrandColors.blue)  // 设置背景色
+        
+        // 设置标题字体和颜色
+        appearance.titleTextAttributes = [
+            .font: UIFont.systemFont(ofSize: 25, weight: .black),  // 设置字号为28
+            .foregroundColor: UIColor.white        // 设置颜色为白色
+        ]
+        
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+
         
         return true
     }

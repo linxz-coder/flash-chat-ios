@@ -64,6 +64,11 @@ class ChatViewController: UIViewController {
                             //后台运行异步任务
                             DispatchQueue.main.async {
                                 self.tableView.reloadData()
+                                
+                                //表格可以区分不同section，像apple设置里面一样，我们没有设置，所以是0
+                                let indexPath = IndexPath(row: self.messages.count - 1, section: 0)
+                                
+                                self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
                             }
                             
                         }
@@ -72,27 +77,6 @@ class ChatViewController: UIViewController {
             }
         }
     }
-
-// 仅读取信息
-//        do {
-//            let snapshot = try await db.collection(K.FStore.collectionName).getDocuments()
-//            for document in snapshot.documents {
-////                print("\(document.documentID) => \(document.data())")
-//                let data = document.data()
-//                if let messageSender = data[K.FStore.senderField] as? String, let messageBody = data[K.FStore.bodyField] as? String{
-//                    let newMessage = Message(sender: messageSender, body: messageBody)
-//                    messages.append(newMessage)
-//                    
-//                    //后台运行异步任务
-//                    DispatchQueue.main.async {
-//                        self.tableView.reloadData()
-//                    }
-//                    
-//                }
-//            }
-//        } catch {
-//            print("Error getting documents: \(error)")
-//        }
     
     @IBAction func sendPressed(_ sender: UIButton) {
         //Auth提供的访问用户名的方法
@@ -106,6 +90,12 @@ class ChatViewController: UIViewController {
                     print("There is an issue saving data to firestore, \(error)")
                 } else {
                     print("Successfully saved data.")
+                    
+                    //确保主线程是异步进行的，因为是在closure里面做的，要等信息输送完毕后才清空文本框。
+                    DispatchQueue.main.async{
+                        self.messageTextfield.text = ""
+                    }
+                    
                 }
             }
         }
@@ -130,10 +120,29 @@ extension ChatViewController: UITableViewDataSource{
         return messages.count
     }
     
-    //用哪个cell
+    //每个cell都使用的方法
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let message = messages[indexPath.row]
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: K.cellIdentifier, for:indexPath) as! MessageCell //as!强制类型下降
-        cell.label.text = messages[indexPath.row].body
+        cell.label.text = message.body
+        
+        // This is a message from the current user
+        if message.sender == Auth.auth().currentUser?.email {
+            cell.leftImageView.isHidden = true
+            cell.rightImageView.isHidden = false
+            cell.messageBubble.backgroundColor = UIColor(named: K.BrandColors.lightPurple)
+            cell.label.textColor = UIColor(named: K.BrandColors.purple)
+        } else {
+            // This is a message from the another sender.
+            cell.leftImageView.isHidden = false
+            cell.rightImageView.isHidden = true
+            cell.messageBubble.backgroundColor = UIColor(named: K.BrandColors.purple)
+            cell.label.textColor = UIColor(named: K.BrandColors.lightPurple)
+        }
+        
+
         return cell
         
     }
